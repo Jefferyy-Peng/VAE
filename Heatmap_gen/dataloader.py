@@ -4,6 +4,41 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 import PIL.Image as Image
 import os
+import pandas as pd
+
+class DiffusionDBDataset(Dataset):
+    def __init__(self, dataset, transform=None):
+        self.dataset = dataset
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        item = self.dataset[idx]
+        image = item['image'].convert('RGB')
+        if self.transform:
+            image = self.transform(image)
+        return {
+            'image': image,
+            'prompt': item['prompt'],
+        }
+
+class ArtifactDataset(Dataset):
+    def __init__(self, root_path, transform):
+        df = pd.read_csv(os.path.join(root_path, 'metadata.csv'))
+        self.root_path = root_path
+        self.path_list = df['image_path']
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.path_list)
+
+    def __getitem__(self, index):
+        path = os.path.join(self.root_path, self.path_list[index])
+        image = Image.open(path)
+        image = self.transform(image)
+        return image
 
 class HeatmapDataset(Dataset):
     def __init__(self, data_dict, mode, transform=None):

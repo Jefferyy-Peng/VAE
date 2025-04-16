@@ -35,7 +35,7 @@ class GradCAM:
             activations[:, i, :, :] *= weights[:, i].unsqueeze(-1).unsqueeze(-1)
         # activations *= gradients
 
-        cam = torch.mean(activations, dim=1).squeeze()
+        cam = torch.mean(activations, dim=1)
 
         cam = F.relu(cam)
         cam_max = torch.max(cam, dim=1, keepdim=True)[0]

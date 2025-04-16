@@ -20,12 +20,12 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
 import lpips
 import torch.multiprocessing as mp
+from utils import initialize_vlm
 from transformers import AutoProcessor, AutoModelForCausalLM, LlavaForConditionalGeneration
 
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 from Heatmap_gen.dataloader import HumanImageDataset
-from Inpainting import initialize_vlm
 from VAE_l2_score import create_mse_heatmap, center_crop, top_crop, HeatMap
 import pickle
 
@@ -102,22 +102,6 @@ def setup(rank, world_size):
 
 def cleanup():
     dist.destroy_process_group()
-
-def initialize_vlm(checkpoint_name, device):
-    checkpoint = checkpoint_name
-    if checkpoint == "microsoft/git-base":
-        processor = AutoProcessor.from_pretrained(checkpoint)
-        model = AutoModelForCausalLM.from_pretrained(checkpoint).to(device)
-    elif checkpoint == 'llava-hf/llava-1.5-7b-hf':
-        model = LlavaForConditionalGeneration.from_pretrained(checkpoint)
-        processor = AutoProcessor.from_pretrained(checkpoint)
-        if torch.cuda.device_count() > 1:
-            print(f"Using {torch.cuda.device_count()} GPUs")
-            model = DataParallel(model).to(device)
-        else:
-            model = model.to(device)
-
-    return model,  processor
 
 seed_value = 42
 set_seed(seed_value)
